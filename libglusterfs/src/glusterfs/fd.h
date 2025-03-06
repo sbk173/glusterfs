@@ -33,6 +33,7 @@ struct _fd_ctx {
         uint64_t value1;
         void *ptr1;
     };
+    uintptr_t read_mask;
 };
 
 struct _fd {

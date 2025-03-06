@@ -1375,6 +1375,9 @@ ec_manager_readv(ec_fop_data_t *fop, int32_t state)
             if (ec->read_mask) {
                 fop->mask &= ec->read_mask;
             }
+            if(fop->fd->_ctx->read_mask != 0){
+                fop->mask &= fop->fd->_ctx->read_mask;
+            }
             ec_dispatch_min(fop);
 
             return EC_STATE_PREPARE_ANSWER;

@@ -842,12 +842,31 @@ ec_fsetxattr(call_frame_t *frame, xlator_t *this, uintptr_t target,
     ec_cbk_t callback = {.fsetxattr = func};
     ec_fop_data_t *fop = NULL;
     int32_t error = ENOMEM;
+    data_t *dict_data = NULL;
+    uint16_t *value = 0;
+    uintptr_t mask = 0;
+    char *mask_key = "user.readmask";
+    int ret = 0;
+    int32_t op_ret = -1;
 
     gf_msg_trace("ec", 0, "EC(FSETXATTR) %p", frame);
 
     VALIDATE_OR_GOTO(this, out);
     GF_VALIDATE_OR_GOTO(this->name, frame, out);
     GF_VALIDATE_OR_GOTO(this->name, this->private, out);
+
+    ret = dict_lookup(dict, mask_key, &dict_data);
+    if(!ret && dict_data){
+        value = (uint16_t*)data_to_ptr(dict_data);
+        mask = *value;
+        fd->_ctx->read_mask = mask;
+        dict_deln(dict, mask_key, strlen(mask_key));
+        value = 0;
+        dict_data = NULL;
+        error = 0;
+        op_ret = 0;
+        goto out;
+    }
 
     fop = ec_fop_data_allocate(frame, this, GF_FOP_FSETXATTR, 0, target,
                                fop_flags, ec_wind_fsetxattr, ec_manager_xattr,
@@ -897,7 +916,7 @@ out:
     if (fop != NULL) {
         ec_manager(fop, error);
     } else {
-        func(frame, NULL, this, -1, error, NULL);
+        func(frame, NULL, this, op_ret, error, NULL);
     }
 }
 
